@@ -27,6 +27,22 @@ async function run() {
     // Connect the client to the server	(optional starting in v4.7)
     await client.connect();
 
+    const db = client.db('motiar-store-db');
+    const parcelCollection = db.collection('parcels');
+
+    app.get('/parcels', async(req, res) => {
+       const query = {}
+       const cursor = parcelCollection.find(query)
+       const result = await cursor.toArray();
+      res.send(result);
+    })
+
+    app.post('/parcels', async(req, res) => {
+      const parcel = req.body;
+      const result = await parcelCollection.insertOne(parcel);
+      res.send(result);
+    })
+
 
 
     // Send a ping to confirm a successful connection
