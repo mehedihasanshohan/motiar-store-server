@@ -72,6 +72,19 @@ async function run() {
     const db = client.db("motiar-store-db");
     const parcelCollection = db.collection("parcels");
     const paymentCollection = db.collection('payments');
+    const userCollection = db.collection('users');
+
+
+    // user related api
+    app.post('/users', async(req, res) => {
+      const user = req.body;
+      user.role = 'user';
+      user.createdAt = new Date();
+
+      const result = await userCollection.insertOne(user);
+      res.send(result);
+    })
+
 
     app.get("/parcels", async (req, res) => {
       const query = {};
@@ -207,7 +220,7 @@ async function run() {
           return res.status(403).send({message: "forbidden"})
         }
       }
-      const  cursor = paymentCollection.find(query);
+      const  cursor = paymentCollection.find(query).sort({paidAt: -1});
       const result = await cursor.toArray();
       res.send(result);
     })
