@@ -6,6 +6,17 @@ const port = process.env.PORT || 3000;
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 const stripe = require("stripe")(process.env.STRIPE_SECRET);
 
+const admin = require("firebase-admin");
+
+
+admin.initializeApp({
+   credential: admin.credential.cert({
+    project_id: process.env.FIREBASE_PROJECT_ID,
+    client_email: process.env.FIREBASE_CLIENT_EMAIL,
+    private_key: process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, "\n"),
+  }),
+});
+
 // utils/generateTrackingId.js
 const crypto = require("crypto");
 function generateTrackingId (){
@@ -21,13 +32,23 @@ function generateTrackingId (){
 app.use(express.json());
 app.use(cors());
 
-const verifyToken = (req, res, next) => {
+const verifyToken = async (req, res, next) => {
   console.log(req.headers.authorization)
   const token = req.headers.authorization;
   if(!token){
     return res.status(401).send({message: 'unauthorized'})
   }
-  next();
+
+  try{
+    const idToken = token.split(' ')[1];
+    const decoded = await admin.auth().verifyIdToken(idToken);
+    console.log('decoded in the token', decoded);
+    req.decoded_email = decoded.email;
+    next();
+  }
+  catch(err){
+    return res.status(401).send({message: 'unauthorized access'})
+  }
 }
 
 // ubsEtltWNpMsPBvt
@@ -180,7 +201,11 @@ async function run() {
       console.log('headers in middleware', req.headers);
 
       if(email){
-        query.customerEmail = email
+        query.customerEmail = email;
+        // check email address
+        if(email !== req.decoded_email){
+          return res.status(403).send({message: "forbidden"})
+        }
       }
       const  cursor = paymentCollection.find(query);
       const result = await cursor.toArray();
