@@ -21,6 +21,15 @@ function generateTrackingId (){
 app.use(express.json());
 app.use(cors());
 
+const verifyToken = (req, res, next) => {
+  console.log(req.headers.authorization)
+  const token = req.headers.authorization;
+  if(!token){
+    return res.status(401).send({message: 'unauthorized'})
+  }
+  next();
+}
+
 // ubsEtltWNpMsPBvt
 // motiar-store-client
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASSWORD}@cluster0.buxufwj.mongodb.net/?appName=Cluster0`;
@@ -164,9 +173,12 @@ async function run() {
     })
 
     // payment related apis
-    app.get('/payments', async(req, res) => {
+    app.get('/payments', verifyToken, async(req, res) => {
       const email = req.query.email;
       const query = {}
+
+      console.log('headers in middleware', req.headers);
+
       if(email){
         query.customerEmail = email
       }
