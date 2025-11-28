@@ -233,6 +233,29 @@ async function run() {
 
 
     // rides related api
+    app.get('/riders', async(req, res) => {
+      const query = {}
+      if(req.query.status){
+        query.status = req.query.status;
+      }
+      const cursor = ridersCollection.find(query);
+      const result = await cursor.toArray();
+      res.send(result);
+    })
+
+    app.patch('/riders/:id', verifyToken, async(req, res) => {
+      const status = req.body.status;
+      const id = req.params.id;
+      const query = {_id: new ObjectId(id)}
+      const updatedDoc = {
+        $set: {
+          status: status
+        }
+      }
+      const result = await ridersCollection.updateOne(query, updatedDoc);
+      res.send(result);
+    })
+
     app.post('/riders', async(req, res)=> {
       const rider = req.body;
       rider.status = 'pending';
