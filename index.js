@@ -75,6 +75,18 @@ async function run() {
     const userCollection = db.collection('users');
     const ridersCollection = db.collection('riders');
 
+    const verifyAdmin = async (req, res) => {
+      const email = req.decoded_email;
+      const query = {email};
+      const user = await userCollection.findOne(query);
+
+      if(!user || user.role !== 'admin'){
+        return res.status(403).send({message: 'forbidden access'});
+      }
+      next();
+    }
+
+
     // user related api
     app.get('/users', verifyToken, async (req, res) => {
       const cursor = userCollection.find();
@@ -90,7 +102,7 @@ async function run() {
     })
 
 
-    app.patch('/users/:id', async(req, res) => {
+    app.patch('/users/:id/role', verifyToken, verifyAdmin, async(req, res) => {
       const id = req.params.id;
       const roleInfo = req.body;
       const query = {_id: new ObjectId(id)}
@@ -270,7 +282,7 @@ async function run() {
       res.send(result);
     })
 
-    app.patch('/riders/:id', verifyToken, async(req, res) => {
+    app.patch('/riders/:id', verifyToken, verifyAdmin, async(req, res) => {
       const status = req.body.status;
       const id = req.params.id;
       const query = {_id: new ObjectId(id)}
