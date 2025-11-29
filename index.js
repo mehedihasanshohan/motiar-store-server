@@ -76,6 +76,12 @@ async function run() {
     const ridersCollection = db.collection('riders');
 
     // user related api
+    app.get('/users', verifyToken, async (req, res) => {
+      const cursor = userCollection.find();
+      const result = await cursor.toArray();
+      res.send(result);
+    })
+
     app.post('/users', async(req, res) => {
       const user = req.body;
       user.role = 'user';
