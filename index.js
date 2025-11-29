@@ -80,6 +80,20 @@ async function run() {
       const cursor = userCollection.find();
       const result = await cursor.toArray();
       res.send(result);
+    });
+
+
+    app.patch('/users/:id', async(req, res) => {
+      const id = req.params.id;
+      const roleInfo = req.body;
+      const query = {_id: new ObjectId(id)}
+      const updatedDoc = {
+        $set: {
+          role: roleInfo.role
+        }
+      }
+      const result = await userCollection.updateOne(query, updatedDoc)
+      res.send(result)
     })
 
     app.post('/users', async(req, res) => {
@@ -93,8 +107,8 @@ async function run() {
         return res.send({message: 'user exists'})
       }
 
-      const result = await userCollection.insertOne(user);
-      res.send(result);
+      const result = await userCollection.insertOne(user)
+      res.send(result)
     })
 
 
