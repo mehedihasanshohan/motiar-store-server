@@ -75,7 +75,7 @@ async function run() {
     const userCollection = db.collection('users');
     const ridersCollection = db.collection('riders');
 
-    const verifyAdmin = async (req, res) => {
+    const verifyAdmin = async (req, res, next) => {
       const email = req.decoded_email;
       const query = {email};
       const user = await userCollection.findOne(query);
@@ -133,9 +133,12 @@ async function run() {
 
     app.get("/parcels", async (req, res) => {
       const query = {};
-      const { email } = req.query;
+      const { email, deliveryStatus } = req.query;
       if (email) {
         query.senderEmail = email;
+      }
+      if(deliveryStatus){
+        query.deliveryStatus = deliveryStatus;
       }
       const options = { sort: { createdAt: -1 } };
       const cursor = parcelCollection.find(query, options);
@@ -219,7 +222,8 @@ async function run() {
         const update = {
           $set: {
             paymentStatus: 'paid',
-            trackingId: trackingId
+            trackingId: trackingId,
+            deliveryStatus: 'pending-pickup'
           }
         }
         const result = await parcelCollection.updateOne(query, update);
